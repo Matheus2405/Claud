@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes | Cadastro</title>
+    <style>
+        :root {
+            font-family: Inter, "Segoe UI", Arial, sans-serif;
+            color: #172033;
+            background: #f3f5f9;
+            font-synthesis: none;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        header {
+            padding: 22px max(24px, calc((100% - 1040px) / 2));
+            background: #172554;
+            color: white;
+        }
+
+        header strong {
+            font-size: 1.15rem;
+        }
+
+        main {
+            width: min(1040px, calc(100% - 32px));
+            margin: 36px auto;
+        }
+
+        h1 {
+            margin-bottom: 6px;
+            font-size: clamp(1.7rem, 4vw, 2.25rem);
+        }
+
+        .subtitulo {
+            margin-top: 0;
+            color: #64748b;
+        }
+
+        .grade {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+            gap: 20px;
+            margin-top: 26px;
+        }
+
+        section {
+            padding: 22px;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 16px #1725540a;
+        }
+
+        h2 {
+            margin: 0 0 18px;
+            font-size: 1.15rem;
+        }
+
+        form {
+            display: grid;
+            gap: 14px;
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            font-size: .92rem;
+            font-weight: 600;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            min-height: 42px;
+            padding: 9px 11px;
+            border-radius: 7px;
+            font: inherit;
+        }
+
+        input,
+        select {
+            border: 1px solid #cbd5e1;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #2563eb;
+            outline: 2px solid #bfdbfe;
+        }
+
+        button {
+            border: 0;
+            background: #2563eb;
+            color: white;
+            cursor: pointer;
+            font-weight: 650;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button.excluir {
+            background: #b91c1c;
+        }
+
+        button.excluir:hover {
+            background: #991b1b;
+        }
+
+        #resultado {
+            min-height: 80px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+            color: #334155;
+        }
+
+        .status {
+            color: #64748b;
+            font-size: .9rem;
+        }
+
+        @media (max-width: 520px) {
+            main {
+                margin-top: 24px;
+            }
+
+            section {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+<header><strong>Cadastro de Clientes</strong></header>
+<main>
+    <h1>Clientes</h1>
+    <p class="subtitulo">Cadastre e gerencie os dados dos seus clientes.</p>
+
+    <div class="grade">
+        <section>
+            <h2>Novo cadastro</h2>
+            <form id="cadastro-form">
+                <label>Nome
+                    <input name="nome" autocomplete="name" required>
+                </label>
+                <label>E-mail
+                    <input name="email" type="email" autocomplete="email" required>
+                </label>
+                <label>Idade
+                    <input name="idade" type="number" min="0" step="1" required>
+                </label>
+                <button type="submit">Cadastrar cliente</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Consultar cliente</h2>
+            <form id="busca-form">
+                <label>Pesquisar por
+                    <select name="campo">
+                        <option value="email">E-mail</option>
+                        <option value="nome">Nome</option>
+                        <option value="idade">Idade</option>
+                    </select>
+                </label>
+                <label>Valor
+                    <input name="valor" required>
+                </label>
+                <button type="submit">Buscar</button>
+            </form>
+        </section>
+
+        <section>
+            <h2>Excluir cliente</h2>
+            <form id="exclusao-form">
+                <label>Excluir por
+                    <select name="campo">
+                        <option value="nome">Nome</option>
+                        <option value="idade">Idade</option>
+                    </select>
+                </label>
+                <label>Valor
+                    <input name="valor" required>
+                </label>
+                <button class="excluir" type="submit">Excluir</button>
+            </form>
+        </section>
+
+        <section aria-live="polite">
+            <h2>Resposta</h2>
+            <div id="resultado" class="status">Os resultados das operações aparecerão aqui.</div>
+        </section>
+    </div>
+</main>
+
+<script>
+    const resultado = document.querySelector("#resultado");
+
+    async function requisitar(url, opcoes) {
+        resultado.textContent = "Aguarde...";
+        const resposta = await fetch(url, opcoes);
+        const corpo = await resposta.text();
+
+        if (!resposta.ok) {
+            throw new Error(corpo || `Erro HTTP ${resposta.status}`);
+        }
+
+        if (!corpo) {
+            resultado.textContent = "Operação concluída com sucesso.";
+            return;
+        }
+
+        try {
+            resultado.textContent = JSON.stringify(JSON.parse(corpo), null, 2);
+        } catch {
+            resultado.textContent = corpo;
+        }
+    }
+
+    function dados(formulario) {
+        return Object.fromEntries(new FormData(formulario));
+    }
+
+    document.querySelector("#cadastro-form").addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const formulario = evento.currentTarget;
+        const valores = dados(formulario);
+
+        try {
+            await requisitar("/clientes/salvar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: valores.nome.trim(),
+                    email: valores.email.trim(),
+                    idade: Number(valores.idade)
+                })
+            });
+            formulario.reset();
+        } catch (erro) {
+            resultado.textContent = `Erro ao cadastrar: ${erro.message}`;
+        }
+    });
+
+    document.querySelector("#busca-form").addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const valores = dados(evento.currentTarget);
+        const campo = valores.campo;
+        const parametro = new URLSearchParams({ [campo]: valores.valor.trim() });
+
+        try {
+            await requisitar(`/clientes/${campo}?${parametro}`);
+        } catch (erro) {
+            resultado.textContent = `Erro ao buscar: ${erro.message}`;
+        }
+    });
+
+    document.querySelector("#exclusao-form").addEventListener("submit", async (evento) => {
+        evento.preventDefault();
+        const formulario = evento.currentTarget;
+        const valores = dados(formulario);
+        const campo = valores.campo;
+
+        if (!confirm(`Confirma a exclusão por ${campo}: "${valores.valor}"?`)) {
+            return;
+        }
+
+        try {
+            await requisitar(`/clientes/${campo}?${new URLSearchParams({
+                [campo]: valores.valor.trim()
+            })}`, { method: "DELETE" });
+            formulario.reset();
+        } catch (erro) {
+            resultado.textContent = `Erro ao excluir: ${erro.message}`;
+        }
+    });
+</script>
+</body>
+</html>

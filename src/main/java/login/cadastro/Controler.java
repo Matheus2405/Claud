@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/clientes")
+@RequestMapping ("/clientes")
 public class Controler {
 
     private final Login login;
@@ -20,8 +20,9 @@ public class Controler {
         this.login = login;
     }
 
-    @PostMapping
+    @PostMapping()
     public Cliente salvar(@RequestBody Cliente cliente) {
+
         return login.salvar(cliente);
     }
 
@@ -39,7 +40,6 @@ public class Controler {
     public List<Cliente> buscarPorIdade(@RequestParam Integer idade) {
         return login.buscarPorIdade(idade);
     }
-
     @DeleteMapping("/nome")
     public String deletarPorNome(@RequestParam String nome) {
         login.deletarPorNome(nome);
